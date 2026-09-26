@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
+import { settingsDefaults } from "@/hooks/useSettings";
 
 const groups: Array<{ title: string; fields: Array<{ key: string; label: string; long?: boolean }> }> = [
   {
@@ -57,12 +58,24 @@ export function AdminSettings() {
     if (!settings.data) return;
     const next: Record<string, string> = {};
     for (const row of settings.data) next[row.key] = row.value ?? "";
+
+    // Keep the official TNL Motor contact details visible in the admin panel.
+    next.company_name = settingsDefaults.company_name;
+    next.phone = settingsDefaults.phone;
+    next.whatsapp = settingsDefaults.whatsapp;
+    next.email = settingsDefaults.email;
     setValues(next);
   }, [settings.data]);
 
   const save = useMutation({
     mutationFn: async () => {
-      const rows = Object.entries(values).map(([key, value]) => ({ key, value }));
+      const rows = Object.entries({
+        ...values,
+        company_name: settingsDefaults.company_name,
+        phone: settingsDefaults.phone,
+        whatsapp: settingsDefaults.whatsapp,
+        email: settingsDefaults.email,
+      }).map(([key, value]) => ({ key, value }));
       const { error } = await supabase.from("website_settings").upsert(rows, { onConflict: "key" });
       if (error) throw error;
     },
@@ -102,6 +115,7 @@ export function AdminSettings() {
                       id={f.key}
                       rows={2}
                       value={values[f.key] ?? ""}
+                      disabled={["company_name", "phone", "whatsapp", "email"].includes(f.key)}
                       onChange={(e) => setValues((v) => ({ ...v, [f.key]: e.target.value }))}
                     />
                   ) : (
