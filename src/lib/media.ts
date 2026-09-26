@@ -5,6 +5,28 @@ export const VEHICLE_BUCKET = "vehicle-images";
 export const SELL_BUCKET = "sell-photos";
 
 const ONE_HOUR = 60 * 60;
+export const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+export const MAX_UPLOAD_IMAGES = 12;
+
+const ALLOWED_IMAGE_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/avif",
+]);
+
+export function validateImageFiles(files: File[], maxFiles = MAX_UPLOAD_IMAGES): string | null {
+  if (files.length > maxFiles) return `Please select no more than ${maxFiles} images.`;
+  for (const file of files) {
+    if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
+      return `${file.name} is not a supported image. Use JPG, PNG, WebP or AVIF.`;
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      return `${file.name} is too large. Each image must be 10 MB or less.`;
+    }
+  }
+  return null;
+}
 
 /**
  * Vehicle photos live in a private bucket, so stored paths are turned into
