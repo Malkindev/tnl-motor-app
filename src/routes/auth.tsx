@@ -47,6 +47,7 @@ function AuthPage() {
   const navigate = useNavigate();
   const { user, loading } = useSession();
   const [busy, setBusy] = useState(false);
+  const [loginLinkBusy, setLoginLinkBusy] = useState(false);
   const target = safePath(search.redirect);
   const siteOrigin = (import.meta.env["VITE_SITE_URL"] || "https://tnl-motor-app.vercel.app").replace(/\/$/, "");
 
@@ -60,10 +61,18 @@ function AuthPage() {
   async function handleSignIn(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    const { error } = await supabase.auth.signInWithPassword(signIn);
+    const email = signIn.email.trim().toLowerCase();
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password: signIn.password,
+    });
     setBusy(false);
     if (error) {
-      toast.error(error.message);
+      toast.error(
+        error.message === "Invalid login credentials"
+          ? "The production account rejected these credentials. Check the email/password, or use the secure email sign-in link below."
+          : error.message,
+      );
       return;
     }
     toast.success("Welcome back");
@@ -104,6 +113,31 @@ function AuthPage() {
     }
     if (result.redirected) return;
     navigate({ to: target, replace: true });
+  }
+
+  async function handleEmailLoginLink() {
+    const email = signIn.email.trim().toLowerCase();
+    if (!email) {
+      toast.error("Enter your email address first");
+      return;
+    }
+
+    setLoginLinkBusy(true);
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        shouldCreateUser: false,
+        emailRedirectTo: `${siteOrigin}${target}`,
+      },
+    });
+    setLoginLinkBusy(false);
+
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+
+    toast.success("Secure sign-in link sent. Check your email inbox.");
   }
 
   async function handleReset() {
@@ -165,6 +199,16 @@ function AuthPage() {
                   >
                     Forgot your password?
                   </button>
+                  {search.redirect === "/admin" ? (
+                    <button
+                      type="button"
+                      onClick={handleEmailLoginLink}
+                      disabled={loginLinkBusy}
+                      className="w-full text-sm font-medium text-accent hover:underline disabled:opacity-60"
+                    >
+                      {loginLinkBusy ? "Sending secure sign-in link…" : "Sign in to Admin with an email link"}
+                    </button>
+                  ) : null}
                 </form>
               </TabsContent>
 
