@@ -12,7 +12,10 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ContactRouteImport } from './routes/contact'
+import { Route as FinancingRouteImport } from './routes/financing'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as SellRouteImport } from './routes/sell'
 import { Route as ServicesRouteImport } from './routes/services'
 import { Route as CarsIndexRouteImport } from './routes/cars.index'
 import { Route as CarsVehicleIdRouteImport } from './routes/cars.$vehicleId'
@@ -32,9 +35,24 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FinancingRoute = FinancingRouteImport.update({
+  id: '/financing',
+  path: '/financing',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SellRoute = SellRouteImport.update({
+  id: '/sell',
+  path: '/sell',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ServicesRoute = ServicesRouteImport.update({
@@ -57,7 +75,10 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
+  '/contact': typeof ContactRoute
+  '/financing': typeof FinancingRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sell': typeof SellRoute
   '/services': typeof ServicesRoute
   '/cars/$vehicleId': typeof CarsVehicleIdRoute
   '/cars/': typeof CarsIndexRoute
@@ -66,7 +87,10 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
+  '/contact': typeof ContactRoute
+  '/financing': typeof FinancingRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sell': typeof SellRoute
   '/services': typeof ServicesRoute
   '/cars/$vehicleId': typeof CarsVehicleIdRoute
   '/cars': typeof CarsIndexRoute
@@ -76,7 +100,10 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
+  '/contact': typeof ContactRoute
+  '/financing': typeof FinancingRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sell': typeof SellRoute
   '/services': typeof ServicesRoute
   '/cars/$vehicleId': typeof CarsVehicleIdRoute
   '/cars/': typeof CarsIndexRoute
@@ -87,7 +114,10 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/auth'
+    | '/contact'
+    | '/financing'
     | '/reset-password'
+    | '/sell'
     | '/services'
     | '/cars/$vehicleId'
     | '/cars/'
@@ -96,7 +126,10 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/auth'
+    | '/contact'
+    | '/financing'
     | '/reset-password'
+    | '/sell'
     | '/services'
     | '/cars/$vehicleId'
     | '/cars'
@@ -105,7 +138,10 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/auth'
+    | '/contact'
+    | '/financing'
     | '/reset-password'
+    | '/sell'
     | '/services'
     | '/cars/$vehicleId'
     | '/cars/'
@@ -115,7 +151,10 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   AuthRoute: typeof AuthRoute
+  ContactRoute: typeof ContactRoute
+  FinancingRoute: typeof FinancingRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SellRoute: typeof SellRoute
   ServicesRoute: typeof ServicesRoute
   CarsVehicleIdRoute: typeof CarsVehicleIdRoute
   CarsIndexRoute: typeof CarsIndexRoute
@@ -144,11 +183,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/financing': {
+      id: '/financing'
+      path: '/financing'
+      fullPath: '/financing'
+      preLoaderRoute: typeof FinancingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sell': {
+      id: '/sell'
+      path: '/sell'
+      fullPath: '/sell'
+      preLoaderRoute: typeof SellRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/services': {
@@ -179,7 +239,10 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   AuthRoute: AuthRoute,
+  ContactRoute: ContactRoute,
+  FinancingRoute: FinancingRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  SellRoute: SellRoute,
   ServicesRoute: ServicesRoute,
   CarsVehicleIdRoute: CarsVehicleIdRoute,
   CarsIndexRoute: CarsIndexRoute,
