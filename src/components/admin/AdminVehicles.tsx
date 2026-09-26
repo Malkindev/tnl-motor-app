@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ImagePlus, Pencil, Plus, Star, Trash2, X } from "lucide-react";
 
@@ -26,7 +26,7 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPrice, vehicleTitle } from "@/lib/format";
-import { useImageUrl, validateImageFiles, VEHICLE_BUCKET } from "@/lib/media";
+import { MAX_UPLOAD_IMAGES, useImageUrl, validateImageFiles, VEHICLE_BUCKET } from "@/lib/media";
 import { fetchFeatures } from "@/lib/content";
 import {
   bodyTypes,
@@ -73,6 +73,7 @@ export function AdminVehicles() {
   const [editing, setEditing] = useState<VehicleWithImages | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
+  const [pendingImages, setPendingImages] = useState<File[]>([]);
 
   const vehicles = useQuery({
     queryKey: ["admin-vehicles"],
@@ -92,6 +93,7 @@ export function AdminVehicles() {
     setEditing(null);
     setForm(emptyForm);
     setSelectedFeatures([]);
+    setPendingImages([]);
     setOpen(true);
   }
 
@@ -126,7 +128,59 @@ export function AdminVehicles() {
       .select("feature_id")
       .eq("vehicle_id", v.id);
     setSelectedFeatures((data ?? []).map((r) => r.feature_id));
+    setPendingImages([]);
     setOpen(true);
+  }
+
+
+  async function uploadVehicleImages(
+    vehicleId: string,
+    files: File[],
+    startingPosition: number,
+    makeFirstPrimary: boolean,
+  ) {
+    if (!files.length) return;
+
+    const uploadedPaths: string[] = [];
+    const insertedImageIds: string[] = [];
+
+    try {
+      for (let index = 0; index < files.length; index += 1) {
+        const file = files[index]!;
+        const path = `${vehicleId}/${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from(VEHICLE_BUCKET)
+          .upload(path, file, {
+            cacheControl: "3600",
+            contentType: file.type,
+            upsert: false,
+          });
+        if (uploadError) throw uploadError;
+        uploadedPaths.push(path);
+
+        const { data, error: insertError } = await supabase
+          .from("vehicle_images")
+          .insert({
+            vehicle_id: vehicleId,
+            url: path,
+            position: startingPosition + index,
+            is_primary: makeFirstPrimary && index === 0,
+          })
+          .select("id")
+          .single();
+        if (insertError) throw insertError;
+        insertedImageIds.push(data.id);
+      }
+    } catch (error) {
+      if (insertedImageIds.length) {
+        await supabase.from("vehicle_images").delete().in("id", insertedImageIds);
+      }
+      if (uploadedPaths.length) {
+        await supabase.storage.from(VEHICLE_BUCKET).remove(uploadedPaths);
+      }
+      throw error;
+    }
   }
 
   const save = useMutation({
@@ -175,6 +229,23 @@ export function AdminVehicles() {
           if (error) throw error;
         }
       }
+
+      if (!editing && vehicleId && pendingImages.length) {
+        try {
+          await uploadVehicleImages(
+            vehicleId,
+            pendingImages,
+            0,
+            true,
+          );
+        } catch (error) {
+          await supabase.from("vehicles").delete().eq("id", vehicleId);
+          throw new Error(
+            `The vehicle was not created because its photos could not be uploaded: ${error instanceof Error ? error.message : "upload failed"}`,
+          );
+        }
+      }
+
       return vehicleId;
     },
     onSuccess: () => {
@@ -182,6 +253,7 @@ export function AdminVehicles() {
       qc.invalidateQueries({ queryKey: ["admin-vehicles"] });
       qc.invalidateQueries({ queryKey: ["vehicles"] });
       qc.invalidateQueries({ queryKey: ["featured-vehicles"] });
+      setPendingImages([]);
       setOpen(false);
     },
     onError: (e: Error) => toast.error(e.message || "Could not save the vehicle"),
@@ -189,6 +261,23 @@ export function AdminVehicles() {
 
   const remove = useMutation({
     mutationFn: async (id: string) => {
+      const { data: images, error: imageQueryError } = await supabase
+        .from("vehicle_images")
+        .select("url")
+        .eq("vehicle_id", id);
+      if (imageQueryError) throw imageQueryError;
+
+      const storagePaths = (images ?? [])
+        .map((image) => image.url)
+        .filter((url) => !url.startsWith("http://") && !url.startsWith("https://"));
+
+      if (storagePaths.length) {
+        const { error: storageError } = await supabase.storage
+          .from(VEHICLE_BUCKET)
+          .remove(storagePaths);
+        if (storageError) throw storageError;
+      }
+
       const { error } = await supabase.from("vehicles").delete().eq("id", id);
       if (error) throw error;
     },
@@ -297,7 +386,7 @@ export function AdminVehicles() {
                 </div>
               </div>
 
-              {editing ? <VehicleImages vehicle={editing} /> : null}
+              {editing ? <VehicleImages vehicle={editing} /> : <PendingVehicleImages files={pendingImages} onChange={setPendingImages} />}
 
               <div className="flex justify-end gap-2 border-t pt-4">
                 <Button type="button" variant="outline" onClick={() => setOpen(false)}>
@@ -382,33 +471,31 @@ function VehicleImages({ vehicle }: { vehicle: VehicleWithImages }) {
   });
 
   async function upload(files: FileList | null) {
-    if (!files?.length) return;
+    if (!files?.length || uploading) return;
+
     const selected = Array.from(files);
-    const validationError = validateImageFiles(selected);
+    const existing = images.data ?? [];
+    const remainingSlots = Math.max(0, MAX_UPLOAD_IMAGES - existing.length);
+    const validationError = validateImageFiles(selected, remainingSlots);
     if (validationError) {
       toast.error(validationError);
       return;
     }
+
     setUploading(true);
     try {
-      const existing = images.data ?? [];
-      let position = existing.length;
-      for (const file of selected) {
-        const path = `${vehicle.id}/${crypto.randomUUID()}-${file.name.replace(/[^\w.-]/g, "_")}`;
-        const { error: upErr } = await supabase.storage.from(VEHICLE_BUCKET).upload(path, file);
-        if (upErr) throw upErr;
-        const { error } = await supabase.from("vehicle_images").insert({
-          vehicle_id: vehicle.id,
-          url: path,
-          position,
-          is_primary: existing.length === 0 && position === 0,
-        });
-        if (error) throw error;
-        position += 1;
-      }
+      await uploadVehicleImages(
+        vehicle.id,
+        selected,
+        existing.length,
+        !existing.some((image) => image.is_primary),
+      );
       toast.success("Photos uploaded");
       qc.invalidateQueries({ queryKey: ["vehicle-images", vehicle.id] });
       qc.invalidateQueries({ queryKey: ["admin-vehicles"] });
+      qc.invalidateQueries({ queryKey: ["vehicle", vehicle.id] });
+      qc.invalidateQueries({ queryKey: ["vehicles"] });
+      qc.invalidateQueries({ queryKey: ["featured-vehicles"] });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Upload failed");
     } finally {
@@ -416,46 +503,116 @@ function VehicleImages({ vehicle }: { vehicle: VehicleWithImages }) {
     }
   }
   async function makePrimary(id: string) {
-    await supabase.from("vehicle_images").update({ is_primary: false }).eq("vehicle_id", vehicle.id);
-    await supabase.from("vehicle_images").update({ is_primary: true }).eq("id", id);
-    qc.invalidateQueries({ queryKey: ["vehicle-images", vehicle.id] });
-    qc.invalidateQueries({ queryKey: ["admin-vehicles"] });
-    toast.success("Main photo set");
+    const previousPrimary = (images.data ?? []).find((image) => image.is_primary)?.id;
+    try {
+      const { error: clearError } = await supabase
+        .from("vehicle_images")
+        .update({ is_primary: false })
+        .eq("vehicle_id", vehicle.id);
+      if (clearError) throw clearError;
+
+      const { error: setError } = await supabase
+        .from("vehicle_images")
+        .update({ is_primary: true })
+        .eq("vehicle_id", vehicle.id)
+        .eq("id", id);
+      if (setError) {
+        if (previousPrimary) {
+          await supabase
+            .from("vehicle_images")
+            .update({ is_primary: true })
+            .eq("id", previousPrimary);
+        }
+        throw setError;
+      }
+
+      qc.invalidateQueries({ queryKey: ["vehicle-images", vehicle.id] });
+      qc.invalidateQueries({ queryKey: ["admin-vehicles"] });
+      qc.invalidateQueries({ queryKey: ["vehicle", vehicle.id] });
+      qc.invalidateQueries({ queryKey: ["vehicles"] });
+      qc.invalidateQueries({ queryKey: ["featured-vehicles"] });
+      toast.success("Main photo set");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not set the main photo");
+    }
   }
 
   async function move(image: VehicleImage, direction: -1 | 1) {
-    const list = [...(images.data ?? [])];
+    const list = [...(images.data ?? [])].sort((a, b) => a.position - b.position);
     const index = list.findIndex((i) => i.id === image.id);
     const swap = index + direction;
-    if (swap < 0 || swap >= list.length) return;
+    if (index < 0 || swap < 0 || swap >= list.length) return;
+
     const other = list[swap]!;
-    await supabase.from("vehicle_images").update({ position: other.position }).eq("id", image.id);
-    await supabase.from("vehicle_images").update({ position: image.position }).eq("id", other.id);
-    qc.invalidateQueries({ queryKey: ["vehicle-images", vehicle.id] });
+    try {
+      const { error: firstError } = await supabase
+        .from("vehicle_images")
+        .update({ position: other.position })
+        .eq("id", image.id);
+      if (firstError) throw firstError;
+
+      const { error: secondError } = await supabase
+        .from("vehicle_images")
+        .update({ position: image.position })
+        .eq("id", other.id);
+      if (secondError) {
+        await supabase
+          .from("vehicle_images")
+          .update({ position: image.position })
+          .eq("id", image.id);
+        throw secondError;
+      }
+
+      qc.invalidateQueries({ queryKey: ["vehicle-images", vehicle.id] });
+      qc.invalidateQueries({ queryKey: ["admin-vehicles"] });
+      qc.invalidateQueries({ queryKey: ["vehicle", vehicle.id] });
+      qc.invalidateQueries({ queryKey: ["vehicles"] });
+      qc.invalidateQueries({ queryKey: ["featured-vehicles"] });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not reorder photos");
+    }
   }
 
   async function remove(image: VehicleImage) {
-    if (image.url.startsWith("http://") || image.url.startsWith("https://")) {
-      const { error } = await supabase.from("vehicle_images").delete().eq("id", image.id);
-      if (error) {
-        toast.error("Could not remove that demo photo");
-        return;
+    const current = [...(images.data ?? [])].sort((a, b) => a.position - b.position);
+    const wasPrimary = image.is_primary;
+
+    try {
+      if (image.url.startsWith("http://") || image.url.startsWith("https://")) {
+        const { error } = await supabase.from("vehicle_images").delete().eq("id", image.id);
+        if (error) throw error;
+      } else {
+        const { error: storageError } = await supabase
+          .storage
+          .from(VEHICLE_BUCKET)
+          .remove([image.url]);
+        if (storageError) throw storageError;
+
+        const { error } = await supabase.from("vehicle_images").delete().eq("id", image.id);
+        if (error) throw error;
       }
-    } else {
-      const { error: storageError } = await supabase.storage.from(VEHICLE_BUCKET).remove([image.url]);
-      if (storageError) {
-        toast.error("Could not remove the stored photo");
-        return;
+
+      if (wasPrimary) {
+        const next = current.find((item) => item.id !== image.id);
+        if (next) {
+          const { error } = await supabase
+            .from("vehicle_images")
+            .update({ is_primary: true })
+            .eq("vehicle_id", vehicle.id)
+            .eq("id", next.id);
+          if (error) throw error;
+        }
       }
-      const { error } = await supabase.from("vehicle_images").delete().eq("id", image.id);
-      if (error) {
-        toast.error("Photo storage was removed but its database record could not be deleted");
-        return;
-      }
+
+      qc.invalidateQueries({ queryKey: ["vehicle-images", vehicle.id] });
+      qc.invalidateQueries({ queryKey: ["admin-vehicles"] });
+      qc.invalidateQueries({ queryKey: ["vehicle", vehicle.id] });
+      qc.invalidateQueries({ queryKey: ["vehicles"] });
+      qc.invalidateQueries({ queryKey: ["featured-vehicles"] });
+      toast.success("Photo removed");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not remove photo");
     }
-    qc.invalidateQueries({ queryKey: ["vehicle-images", vehicle.id] });
-    qc.invalidateQueries({ queryKey: ["admin-vehicles"] });
-    toast.success("Photo removed");
   }
   return (
     <div className="border-t pt-4">
@@ -469,8 +626,9 @@ function VehicleImages({ vehicle }: { vehicle: VehicleWithImages }) {
       <input
         id="vehicle-photos"
         type="file"
-        accept="image/*"
+        accept=".jpg,.jpeg,.png,.webp,.avif"
         multiple
+        disabled={uploading}
         className="sr-only"
         onChange={(e) => {
           void upload(e.target.files);
@@ -490,6 +648,101 @@ function VehicleImages({ vehicle }: { vehicle: VehicleWithImages }) {
           />
         ))}
       </div>
+    </div>
+  );
+}
+
+function PendingVehicleImages({
+  files,
+  onChange,
+}: {
+  files: File[];
+  onChange: (files: File[]) => void;
+}) {
+  const [previews, setPreviews] = useState<string[]>([]);
+
+  useEffect(() => {
+    const urls = files.map((file) => URL.createObjectURL(file));
+    setPreviews(urls);
+    return () => urls.forEach((url) => URL.revokeObjectURL(url));
+  }, [files]);
+
+  function select(filesList: FileList | null) {
+    if (!filesList?.length) return;
+    const selected = Array.from(filesList);
+    const validationError = validateImageFiles(
+      selected,
+      Math.max(0, MAX_UPLOAD_IMAGES - files.length),
+    );
+    if (validationError) {
+      toast.error(validationError);
+      return;
+    }
+    onChange([...files, ...selected]);
+  }
+
+  return (
+    <div className="border-t pt-4">
+      <div className="flex items-center justify-between gap-3">
+        <Label>Photos</Label>
+        <span className="text-xs text-muted-foreground">
+          {files.length}/{MAX_UPLOAD_IMAGES}
+        </span>
+      </div>
+      <label
+        htmlFor="new-vehicle-photos"
+        className="mt-2 flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed p-5 text-sm text-muted-foreground hover:border-accent hover:text-accent"
+      >
+        <ImagePlus className="size-4" /> Upload photos
+      </label>
+      <input
+        id="new-vehicle-photos"
+        type="file"
+        accept=".jpg,.jpeg,.png,.webp,.avif"
+        multiple
+        disabled={files.length >= MAX_UPLOAD_IMAGES}
+        className="sr-only"
+        onChange={(e) => {
+          select(e.target.files);
+          e.currentTarget.value = "";
+        }}
+      />
+
+      {files.length ? (
+        <div className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-4">
+          {files.map((file, index) => (
+            <div
+              key={`${file.name}-${file.size}-${index}`}
+              className="relative overflow-hidden rounded-lg border"
+            >
+              {previews[index] ? (
+                <img
+                  src={previews[index]}
+                  alt={file.name}
+                  className="aspect-[4/3] w-full object-cover"
+                />
+              ) : (
+                <div className="aspect-[4/3] w-full bg-secondary" />
+              )}
+              <button
+                type="button"
+                onClick={() => onChange(files.filter((_, itemIndex) => itemIndex !== index))}
+                aria-label={`Remove ${file.name}`}
+                className="absolute right-1 top-1 rounded-full bg-background/90 p-1 text-destructive"
+              >
+                <X className="size-3.5" />
+              </button>
+              {index === 0 ? (
+                <Badge className="absolute left-1 top-1 bg-accent text-accent-foreground">Main</Badge>
+              ) : null}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="mt-2 text-xs text-muted-foreground">
+          You can add photos now; they will be uploaded securely when you save the vehicle.
+        </p>
+      )}
     </div>
   );
 }
