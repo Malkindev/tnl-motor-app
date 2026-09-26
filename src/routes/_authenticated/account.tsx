@@ -117,9 +117,8 @@ function Account() {
     e.preventDefault();
     const { error } = await supabase.auth.updateUser({
       password: passwords.next,
-      // @ts-expect-error current_password is accepted by Lovable Cloud auth
       current_password: passwords.current,
-    });
+    } as Parameters<typeof supabase.auth.updateUser>[0]);
     if (error) {
       toast.error(error.message);
       return;
