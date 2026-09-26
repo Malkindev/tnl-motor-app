@@ -30,6 +30,10 @@ export const settingsDefaults: SiteSettings = {
   hero_description: "Quality vehicles. Transparent pricing. A better way to buy and sell cars.",
   cta_heading: "Ready to Find Your Next Car?",
   footer_text: "",
+  facebook: "",
+  instagram: "",
+  twitter: "",
+  tiktok: "",
 };
 
 export async function fetchSettings(): Promise<SiteSettings> {
