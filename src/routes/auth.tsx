@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { Logo } from "@/components/site/Logo";
@@ -47,16 +47,28 @@ function AuthPage() {
   const navigate = useNavigate();
   const { user, loading } = useSession();
   const [busy, setBusy] = useState(false);
-  const [loginLinkBusy, setLoginLinkBusy] = useState(false);
   const target = safePath(search.redirect);
   const siteOrigin = (import.meta.env["VITE_SITE_URL"] || "https://tnl-motor-app.vercel.app").replace(/\/$/, "");
 
   useEffect(() => {
-    if (!loading && user) navigate({ to: target, replace: true });
+    if (loading || !user) return;
+
+    let active = true;
+    void supabase.rpc("is_admin").then(({ data, error }) => {
+      if (!active) return;
+      const destination = !error && data === true ? "/admin" : target;
+      navigate({ to: destination, replace: true });
+    });
+
+    return () => {
+      active = false;
+    };
   }, [loading, user, navigate, target]);
 
   const [signIn, setSignIn] = useState({ email: "", password: "" });
   const [signUp, setSignUp] = useState({ name: "", email: "", phone: "", password: "" });
+  const [showSignInPassword, setShowSignInPassword] = useState(false);
+  const [showSignUpPassword, setShowSignUpPassword] = useState(false);
 
   async function handleSignIn(e: React.FormEvent) {
     e.preventDefault();
@@ -75,8 +87,12 @@ function AuthPage() {
       );
       return;
     }
-    toast.success("Welcome back");
-    navigate({ to: target, replace: true });
+    const { data: isAdmin, error: roleError } = await supabase.rpc("is_admin");
+    const destination = !roleError && isAdmin === true ? "/admin" : target;
+    toast.success(
+      destination === "/admin" ? "Welcome to the TNL Motor Admin Panel" : "Welcome back",
+    );
+    navigate({ to: destination, replace: true });
   }
 
   async function handleSignUp(e: React.FormEvent) {
@@ -181,13 +197,24 @@ function AuthPage() {
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="si-password">Password</Label>
-                    <Input
-                      id="si-password"
-                      type="password"
-                      required
-                      value={signIn.password}
-                      onChange={(e) => setSignIn({ ...signIn, password: e.target.value })}
-                    />
+                    <div className="relative">
+                      <Input
+                        id="si-password"
+                        type={showSignInPassword ? "text" : "password"}
+                        required
+                        value={signIn.password}
+                        onChange={(e) => setSignIn({ ...signIn, password: e.target.value })}
+                        className="pr-11"
+                      />
+                      <button
+                        type="button"
+                        aria-label={showSignInPassword ? "Hide password" : "Show password"}
+                        onClick={() => setShowSignInPassword((visible) => !visible)}
+                        className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-muted-foreground hover:text-foreground"
+                      >
+                        {showSignInPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                      </button>
+                    </div>
                   </div>
                   <Button type="submit" className="w-full" disabled={busy}>
                     {busy ? <Loader2 className="mr-1 size-4 animate-spin" /> : null} Sign in
@@ -243,14 +270,25 @@ function AuthPage() {
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="su-password">Password</Label>
-                    <Input
-                      id="su-password"
-                      type="password"
-                      required
-                      minLength={8}
-                      value={signUp.password}
-                      onChange={(e) => setSignUp({ ...signUp, password: e.target.value })}
-                    />
+                    <div className="relative">
+                      <Input
+                        id="su-password"
+                        type={showSignUpPassword ? "text" : "password"}
+                        required
+                        minLength={8}
+                        value={signUp.password}
+                        onChange={(e) => setSignUp({ ...signUp, password: e.target.value })}
+                        className="pr-11"
+                      />
+                      <button
+                        type="button"
+                        aria-label={showSignUpPassword ? "Hide password" : "Show password"}
+                        onClick={() => setShowSignUpPassword((visible) => !visible)}
+                        className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-muted-foreground hover:text-foreground"
+                      >
+                        {showSignUpPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                      </button>
+                    </div>
                   </div>
                   <Button type="submit" className="w-full" disabled={busy}>
                     {busy ? <Loader2 className="mr-1 size-4 animate-spin" /> : null} Create account
