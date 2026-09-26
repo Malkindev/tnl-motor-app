@@ -82,7 +82,7 @@ function AuthPage() {
     if (error) {
       toast.error(
         error.message === "Invalid login credentials"
-          ? "The production account rejected these credentials. Check the email/password, or use the secure email sign-in link below."
+          ? "Invalid email or password. Please check your credentials and try again."
           : error.message,
       );
       return;
