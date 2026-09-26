@@ -1,0 +1,235 @@
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { z } from "zod";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
+
+import { SiteLayout } from "@/components/site/SiteLayout";
+import { Logo } from "@/components/site/Logo";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable/index";
+import { useSession } from "@/hooks/useAuth";
+
+const searchSchema = z.object({
+  mode: z.enum(["signin", "signup"]).optional(),
+  redirect: z.string().optional(),
+});
+
+export const Route = createFileRoute("/auth")({
+  validateSearch: searchSchema,
+  head: () => ({
+    meta: [
+      { title: "Sign In or Create an Account — TNL Motor" },
+      {
+        name: "description",
+        content:
+          "Sign in to your TNL Motor account to save cars, track enquiries and manage your details.",
+      },
+      { property: "og:title", content: "Sign In — TNL Motor" },
+      { property: "og:description", content: "Access your TNL Motor customer account." },
+    ],
+  }),
+  component: AuthPage,
+});
+
+function safePath(value: string | undefined): string {
+  if (!value) return "/account";
+  if (!value.startsWith("/") || value.startsWith("//")) return "/account";
+  return value;
+}
+
+function AuthPage() {
+  const search = Route.useSearch();
+  const navigate = useNavigate();
+  const { user, loading } = useSession();
+  const [busy, setBusy] = useState(false);
+  const target = safePath(search.redirect);
+
+  useEffect(() => {
+    if (!loading && user) navigate({ to: target, replace: true });
+  }, [loading, user, navigate, target]);
+
+  const [signIn, setSignIn] = useState({ email: "", password: "" });
+  const [signUp, setSignUp] = useState({ name: "", email: "", phone: "", password: "" });
+
+  async function handleSignIn(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    const { error } = await supabase.auth.signInWithPassword(signIn);
+    setBusy(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Welcome back");
+    navigate({ to: target, replace: true });
+  }
+
+  async function handleSignUp(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    const { data, error } = await supabase.auth.signUp({
+      email: signUp.email,
+      password: signUp.password,
+      options: {
+        emailRedirectTo: `${window.location.origin}${target}`,
+        data: { full_name: signUp.name, phone: signUp.phone },
+      },
+    });
+    setBusy(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    if (!data.session) {
+      toast.success("Check your email to confirm your account");
+      return;
+    }
+    toast.success("Account created");
+    navigate({ to: target, replace: true });
+  }
+
+  async function handleGoogle() {
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: `${window.location.origin}/auth${search.redirect ? `?redirect=${encodeURIComponent(target)}` : ""}`,
+    });
+    if (result.error) {
+      toast.error("Google sign-in is unavailable right now");
+      return;
+    }
+    if (result.redirected) return;
+    navigate({ to: target, replace: true });
+  }
+
+  async function handleReset() {
+    if (!signIn.email) {
+      toast.error("Enter your email address first");
+      return;
+    }
+    const { error } = await supabase.auth.resetPasswordForEmail(signIn.email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Password reset link sent to your email");
+  }
+
+  return (
+    <SiteLayout>
+      <section className="section">
+        <div className="container-page max-w-md">
+          <div className="card-surface p-8">
+            <Logo className="mb-6" />
+            <Tabs defaultValue={search.mode === "signup" ? "signup" : "signin"}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="signin">Sign in</TabsTrigger>
+                <TabsTrigger value="signup">Create account</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="signin">
+                <form className="mt-6 space-y-4" onSubmit={handleSignIn}>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="si-email">Email</Label>
+                    <Input
+                      id="si-email"
+                      type="email"
+                      required
+                      value={signIn.email}
+                      onChange={(e) => setSignIn({ ...signIn, email: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="si-password">Password</Label>
+                    <Input
+                      id="si-password"
+                      type="password"
+                      required
+                      value={signIn.password}
+                      onChange={(e) => setSignIn({ ...signIn, password: e.target.value })}
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={busy}>
+                    {busy ? <Loader2 className="mr-1 size-4 animate-spin" /> : null} Sign in
+                  </Button>
+                  <button
+                    type="button"
+                    onClick={handleReset}
+                    className="w-full text-sm text-muted-foreground hover:text-accent"
+                  >
+                    Forgot your password?
+                  </button>
+                </form>
+              </TabsContent>
+
+              <TabsContent value="signup">
+                <form className="mt-6 space-y-4" onSubmit={handleSignUp}>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="su-name">Full name</Label>
+                    <Input
+                      id="su-name"
+                      required
+                      value={signUp.name}
+                      onChange={(e) => setSignUp({ ...signUp, name: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="su-email">Email</Label>
+                    <Input
+                      id="su-email"
+                      type="email"
+                      required
+                      value={signUp.email}
+                      onChange={(e) => setSignUp({ ...signUp, email: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="su-phone">Phone</Label>
+                    <Input
+                      id="su-phone"
+                      value={signUp.phone}
+                      onChange={(e) => setSignUp({ ...signUp, phone: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="su-password">Password</Label>
+                    <Input
+                      id="su-password"
+                      type="password"
+                      required
+                      minLength={8}
+                      value={signUp.password}
+                      onChange={(e) => setSignUp({ ...signUp, password: e.target.value })}
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={busy}>
+                    {busy ? <Loader2 className="mr-1 size-4 animate-spin" /> : null} Create account
+                  </Button>
+                </form>
+              </TabsContent>
+            </Tabs>
+
+            <div className="my-6 flex items-center gap-3 text-xs uppercase tracking-widest text-muted-foreground">
+              <span className="h-px flex-1 bg-border" /> or <span className="h-px flex-1 bg-border" />
+            </div>
+            <Button variant="outline" className="w-full" onClick={handleGoogle}>
+              Continue with Google
+            </Button>
+
+            <p className="mt-6 text-center text-xs text-muted-foreground">
+              By continuing you agree to be contacted about your enquiries.{" "}
+              <Link to="/contact" className="text-accent hover:underline">
+                Questions?
+              </Link>
+            </p>
+          </div>
+        </div>
+      </section>
+    </SiteLayout>
+  );
+}
