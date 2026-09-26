@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { SELL_BUCKET } from "@/lib/media";
+import { SELL_BUCKET, validateImageFiles } from "@/lib/media";
 import { fuelTypes, transmissions } from "@/lib/vehicles";
 import { useSession } from "@/hooks/useAuth";
 
@@ -65,9 +65,11 @@ function Sell() {
     mutationFn: async () => {
       let photos: string[] = [];
       if (files.length && user) {
+        const validationError = validateImageFiles(files);
+        if (validationError) throw new Error(validationError);
         const uploads = await Promise.all(
           files.map(async (file) => {
-            const path = `${user.id}/${Date.now()}-${file.name.replace(/[^\w.-]/g, "_")}`;
+            const path = `${user.id}/${crypto.randomUUID()}-${file.name.replace(/[^\w.-]/g, "_")}`;
             const { error } = await supabase.storage.from(SELL_BUCKET).upload(path, file);
             if (error) throw error;
             return path;
@@ -112,7 +114,7 @@ function Sell() {
         description: "",
       });
     },
-    onError: () => toast.error("We couldn't submit that request. Please try again."),
+    onError: (error: Error) => toast.error(error.message || "We couldn't submit that request. Please try again."),
   });
 
   return (
@@ -202,7 +204,17 @@ function Sell() {
                     accept="image/*"
                     multiple
                     className="sr-only"
-                    onChange={(e) => setFiles([...files, ...Array.from(e.target.files ?? [])])}
+                    onChange={(e) => {
+                      const selected = Array.from(e.target.files ?? []);
+                      const validationError = validateImageFiles([...files, ...selected]);
+                      if (validationError) {
+                        toast.error(validationError);
+                        e.currentTarget.value = "";
+                        return;
+                      }
+                      setFiles([...files, ...selected]);
+                      e.currentTarget.value = "";
+                    }}
                   />
                   {files.length ? (
                     <ul className="space-y-1 text-sm">
