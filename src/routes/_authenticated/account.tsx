@@ -115,10 +115,25 @@ function Account() {
 
   async function changePassword(e: React.FormEvent) {
     e.preventDefault();
-    const { error } = await supabase.auth.updateUser({
-      password: passwords.next,
-      current_password: passwords.current,
-    } as Parameters<typeof supabase.auth.updateUser>[0]);
+    if (!user?.email) {
+      toast.error("We couldn't determine your account email");
+      return;
+    }
+    if (passwords.next.length < 8) {
+      toast.error("Your new password must be at least 8 characters");
+      return;
+    }
+
+    const { error: verifyError } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: passwords.current,
+    });
+    if (verifyError) {
+      toast.error("Your current password is incorrect");
+      return;
+    }
+
+    const { error } = await supabase.auth.updateUser({ password: passwords.next });
     if (error) {
       toast.error(error.message);
       return;
