@@ -1,4 +1,4 @@
-name: TNL Motor CI
+name: TNL Motor Web CI
 
 on:
   push:
@@ -7,23 +7,25 @@ on:
     branches: [main]
 
 jobs:
-  quality:
+  web-quality:
+    name: Web lint and production build
     runs-on: ubuntu-latest
     timeout-minutes: 15
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: 22
+          bun-version: latest
 
       - name: Install dependencies
-        run: npm install
+        run: bun install --frozen-lockfile
 
-      - name: Lint
-        run: npm run lint
+      - name: Lint web app
+        run: bun run lint
 
-      - name: Production build
-        run: npm run build
+      - name: Build web app
+        run: bun run build
