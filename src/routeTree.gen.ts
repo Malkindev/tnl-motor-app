@@ -19,6 +19,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SellRouteImport } from './routes/sell'
 import { Route as ServicesRouteImport } from './routes/services'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedWishlistRouteImport } from './routes/_authenticated/wishlist'
 import { Route as CarsIndexRouteImport } from './routes/cars.index'
 import { Route as CarsVehicleIdRouteImport } from './routes/cars.$vehicleId'
@@ -72,6 +73,11 @@ const AuthenticatedAccountRoute = AuthenticatedAccountRouteImport.update({
   path: '/account',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedWishlistRoute = AuthenticatedWishlistRouteImport.update({
   id: '/wishlist',
   path: '/wishlist',
@@ -98,6 +104,7 @@ export interface FileRoutesByFullPath {
   '/sell': typeof SellRoute
   '/services': typeof ServicesRoute
   '/account': typeof AuthenticatedAccountRoute
+  '/admin': typeof AuthenticatedAdminRoute
   '/wishlist': typeof AuthenticatedWishlistRoute
   '/cars/$vehicleId': typeof CarsVehicleIdRoute
   '/cars/': typeof CarsIndexRoute
@@ -112,6 +119,7 @@ export interface FileRoutesByTo {
   '/sell': typeof SellRoute
   '/services': typeof ServicesRoute
   '/account': typeof AuthenticatedAccountRoute
+  '/admin': typeof AuthenticatedAdminRoute
   '/wishlist': typeof AuthenticatedWishlistRoute
   '/cars/$vehicleId': typeof CarsVehicleIdRoute
   '/cars': typeof CarsIndexRoute
@@ -128,6 +136,7 @@ export interface FileRoutesById {
   '/sell': typeof SellRoute
   '/services': typeof ServicesRoute
   '/_authenticated/account': typeof AuthenticatedAccountRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/wishlist': typeof AuthenticatedWishlistRoute
   '/cars/$vehicleId': typeof CarsVehicleIdRoute
   '/cars/': typeof CarsIndexRoute
@@ -144,6 +153,7 @@ export interface FileRouteTypes {
     | '/sell'
     | '/services'
     | '/account'
+    | '/admin'
     | '/wishlist'
     | '/cars/$vehicleId'
     | '/cars/'
@@ -158,6 +168,7 @@ export interface FileRouteTypes {
     | '/sell'
     | '/services'
     | '/account'
+    | '/admin'
     | '/wishlist'
     | '/cars/$vehicleId'
     | '/cars'
@@ -173,6 +184,7 @@ export interface FileRouteTypes {
     | '/sell'
     | '/services'
     | '/_authenticated/account'
+    | '/_authenticated/admin'
     | '/_authenticated/wishlist'
     | '/cars/$vehicleId'
     | '/cars/'
@@ -264,6 +276,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAccountRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/wishlist': {
       id: '/_authenticated/wishlist'
       path: '/wishlist'
@@ -290,11 +309,13 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAccountRoute: typeof AuthenticatedAccountRoute
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedWishlistRoute: typeof AuthenticatedWishlistRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAccountRoute: AuthenticatedAccountRoute,
+  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedWishlistRoute: AuthenticatedWishlistRoute,
 }
 
