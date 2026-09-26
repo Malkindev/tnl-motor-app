@@ -48,6 +48,7 @@ function AuthPage() {
   const { user, loading } = useSession();
   const [busy, setBusy] = useState(false);
   const target = safePath(search.redirect);
+  const siteOrigin = (import.meta.env["VITE_SITE_URL"] || "https://tnl-motor-app.vercel.app").replace(/\/$/, "");
 
   useEffect(() => {
     if (!loading && user) navigate({ to: target, replace: true });
@@ -76,7 +77,7 @@ function AuthPage() {
       email: signUp.email,
       password: signUp.password,
       options: {
-        emailRedirectTo: `${window.location.origin}${target}`,
+        emailRedirectTo: `${siteOrigin}${target}`,
         data: { full_name: signUp.name, phone: signUp.phone },
       },
     });
@@ -95,7 +96,7 @@ function AuthPage() {
 
   async function handleGoogle() {
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: `${window.location.origin}/auth${search.redirect ? `?redirect=${encodeURIComponent(target)}` : ""}`,
+      redirect_uri: `${siteOrigin}/auth${search.redirect ? `?redirect=${encodeURIComponent(target)}` : ""}`,
     });
     if (result.error) {
       toast.error("Google sign-in is unavailable right now");
@@ -111,7 +112,7 @@ function AuthPage() {
       return;
     }
     const { error } = await supabase.auth.resetPasswordForEmail(signIn.email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: `${siteOrigin}/reset-password`,
     });
     if (error) {
       toast.error(error.message);
