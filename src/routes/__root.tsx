@@ -99,7 +99,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Manrope:wght@400;500;600;700&display=swap",
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
     ],
   }),
 
@@ -128,12 +128,32 @@ function RootComponent() {
   const router = useRouter();
 
   useEffect(() => {
+    const removeLovableBranding = () => {
+      document.querySelectorAll("#lovable-badge, [aria-label='Edit with Lovable']").forEach((element) => {
+        element.remove();
+      });
+
+      document.querySelectorAll("a[href*='lovable.dev']").forEach((element) => {
+        if (element.closest("#lovable-badge") || element.getAttribute("aria-label") === "Edit with Lovable") {
+          element.remove();
+        }
+      });
+    };
+
+    removeLovableBranding();
+    const observer = new MutationObserver(removeLovableBranding);
+    observer.observe(document.body, { childList: true, subtree: true });
+
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       router.invalidate();
       if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
     });
-    return () => sub.subscription.unsubscribe();
+
+    return () => {
+      observer.disconnect();
+      sub.subscription.unsubscribe();
+    };
   }, [router, queryClient]);
 
   return (
