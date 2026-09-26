@@ -205,7 +205,7 @@ function CarsPage() {
       <Button
         variant="outline"
         className="w-full"
-        onClick={() => navigate({ search: {} as CarsSearch })}
+        onClick={() => go({})}
       >
         <X className="mr-1 size-4" /> Clear filters
       </Button>
@@ -315,7 +315,7 @@ function CarsPage() {
                 <p className="mt-2 text-sm text-muted-foreground">
                   Try widening your budget or clearing a filter.
                 </p>
-                <Button className="mt-5" onClick={() => navigate({ search: {} as CarsSearch })}>
+                <Button className="mt-5" onClick={() => go({})}>
                   Clear filters
                 </Button>
               </div>
@@ -327,7 +327,7 @@ function CarsPage() {
                   variant="outline"
                   size="sm"
                   disabled={page <= 1}
-                  onClick={() => navigate({ search: (p) => ({ ...p, page: page - 1 }) })}
+                  onClick={() => go({ ...search, page: page - 1 })}
                 >
                   Previous
                 </Button>
@@ -338,7 +338,7 @@ function CarsPage() {
                   variant="outline"
                   size="sm"
                   disabled={page >= pages}
-                  onClick={() => navigate({ search: (p) => ({ ...p, page: page + 1 }) })}
+                  onClick={() => go({ ...search, page: page + 1 })}
                 >
                   Next
                 </Button>
