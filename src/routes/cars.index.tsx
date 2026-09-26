@@ -69,7 +69,7 @@ const PER_PAGE = 9;
 
 function CarsPage() {
   const search = Route.useSearch();
-  const navigate = useNavigate({ from: "/cars" });
+  const navigate = useNavigate();
   const [view, setView] = useState<"grid" | "list">("grid");
 
   const makes = useQuery({ queryKey: ["makes"], queryFn: fetchMakes });
@@ -85,17 +85,18 @@ function CarsPage() {
   const page = search.page ?? 1;
   const pages = Math.max(1, Math.ceil(total / PER_PAGE));
 
-  function update(patch: Partial<CarsSearch>) {
-    navigate({
-      search: (prev) => {
-        const next: Record<string, unknown> = { ...prev, ...patch, page: 1 };
-        for (const key of Object.keys(next)) {
-          if (next[key] === "" || next[key] === undefined) delete next[key];
-        }
-        return next as CarsSearch;
-      },
-    });
+  function go(next: Record<string, unknown>) {
+    const clean: Record<string, unknown> = { ...next };
+    for (const key of Object.keys(clean)) {
+      if (clean[key] === "" || clean[key] === undefined) delete clean[key];
+    }
+    navigate({ to: "/cars", search: clean as CarsSearch });
   }
+
+  function update(patch: Partial<CarsSearch>) {
+    go({ ...search, ...patch, page: undefined });
+  }
+
 
   const activeCount = Object.entries(search).filter(
     ([k, v]) => k !== "page" && k !== "sort" && v !== undefined && v !== "",
