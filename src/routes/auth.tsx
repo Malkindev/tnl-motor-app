@@ -131,31 +131,6 @@ function AuthPage() {
     navigate({ to: target, replace: true });
   }
 
-  async function handleEmailLoginLink() {
-    const email = signIn.email.trim().toLowerCase();
-    if (!email) {
-      toast.error("Enter your email address first");
-      return;
-    }
-
-    setLoginLinkBusy(true);
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        shouldCreateUser: false,
-        emailRedirectTo: `${siteOrigin}${target}`,
-      },
-    });
-    setLoginLinkBusy(false);
-
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-
-    toast.success("Secure sign-in link sent. Check your email inbox.");
-  }
-
   async function handleReset() {
     if (!signIn.email) {
       toast.error("Enter your email address first");
@@ -226,16 +201,6 @@ function AuthPage() {
                   >
                     Forgot your password?
                   </button>
-                  {search.redirect === "/admin" ? (
-                    <button
-                      type="button"
-                      onClick={handleEmailLoginLink}
-                      disabled={loginLinkBusy}
-                      className="w-full text-sm font-medium text-accent hover:underline disabled:opacity-60"
-                    >
-                      {loginLinkBusy ? "Sending secure sign-in link…" : "Sign in to Admin with an email link"}
-                    </button>
-                  ) : null}
                 </form>
               </TabsContent>
 
