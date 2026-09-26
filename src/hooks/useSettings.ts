@@ -1,7 +1,23 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export type SiteSettings = Record<string, string>;
+export type SettingKey =
+  | "company_name"
+  | "phone"
+  | "whatsapp"
+  | "email"
+  | "address"
+  | "opening_hours"
+  | "hero_heading"
+  | "hero_description"
+  | "cta_heading"
+  | "footer_text"
+  | "facebook"
+  | "instagram"
+  | "twitter"
+  | "tiktok";
+
+export type SiteSettings = Record<SettingKey, string> & { [key: string]: string };
 
 export const settingsDefaults: SiteSettings = {
   company_name: "TNL Motor",
