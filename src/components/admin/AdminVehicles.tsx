@@ -26,7 +26,7 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPrice, vehicleTitle } from "@/lib/format";
-import { useImageUrl, VEHICLE_BUCKET } from "@/lib/media";
+import { useImageUrl, validateImageFiles, VEHICLE_BUCKET } from "@/lib/media";
 import { fetchFeatures } from "@/lib/content";
 import {
   bodyTypes,
@@ -383,12 +383,18 @@ function VehicleImages({ vehicle }: { vehicle: VehicleWithImages }) {
 
   async function upload(files: FileList | null) {
     if (!files?.length) return;
+    const selected = Array.from(files);
+    const validationError = validateImageFiles(selected);
+    if (validationError) {
+      toast.error(validationError);
+      return;
+    }
     setUploading(true);
     try {
       const existing = images.data ?? [];
       let position = existing.length;
-      for (const file of Array.from(files)) {
-        const path = `${vehicle.id}/${Date.now()}-${file.name.replace(/[^\w.-]/g, "_")}`;
+      for (const file of selected) {
+        const path = `${vehicle.id}/${crypto.randomUUID()}-${file.name.replace(/[^\w.-]/g, "_")}`;
         const { error: upErr } = await supabase.storage.from(VEHICLE_BUCKET).upload(path, file);
         if (upErr) throw upErr;
         const { error } = await supabase.from("vehicle_images").insert({
@@ -403,13 +409,12 @@ function VehicleImages({ vehicle }: { vehicle: VehicleWithImages }) {
       toast.success("Photos uploaded");
       qc.invalidateQueries({ queryKey: ["vehicle-images", vehicle.id] });
       qc.invalidateQueries({ queryKey: ["admin-vehicles"] });
-    } catch {
-      toast.error("Upload failed");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Upload failed");
     } finally {
       setUploading(false);
     }
   }
-
   async function makePrimary(id: string) {
     await supabase.from("vehicle_images").update({ is_primary: false }).eq("vehicle_id", vehicle.id);
     await supabase.from("vehicle_images").update({ is_primary: true }).eq("id", id);
@@ -430,13 +435,28 @@ function VehicleImages({ vehicle }: { vehicle: VehicleWithImages }) {
   }
 
   async function remove(image: VehicleImage) {
-    await supabase.storage.from(VEHICLE_BUCKET).remove([image.url]);
-    await supabase.from("vehicle_images").delete().eq("id", image.id);
+    if (image.url.startsWith("http://") || image.url.startsWith("https://")) {
+      const { error } = await supabase.from("vehicle_images").delete().eq("id", image.id);
+      if (error) {
+        toast.error("Could not remove that demo photo");
+        return;
+      }
+    } else {
+      const { error: storageError } = await supabase.storage.from(VEHICLE_BUCKET).remove([image.url]);
+      if (storageError) {
+        toast.error("Could not remove the stored photo");
+        return;
+      }
+      const { error } = await supabase.from("vehicle_images").delete().eq("id", image.id);
+      if (error) {
+        toast.error("Photo storage was removed but its database record could not be deleted");
+        return;
+      }
+    }
     qc.invalidateQueries({ queryKey: ["vehicle-images", vehicle.id] });
     qc.invalidateQueries({ queryKey: ["admin-vehicles"] });
     toast.success("Photo removed");
   }
-
   return (
     <div className="border-t pt-4">
       <Label>Photos</Label>
@@ -452,7 +472,10 @@ function VehicleImages({ vehicle }: { vehicle: VehicleWithImages }) {
         accept="image/*"
         multiple
         className="sr-only"
-        onChange={(e) => upload(e.target.files)}
+        onChange={(e) => {
+          void upload(e.target.files);
+          e.currentTarget.value = "";
+        }}
       />
 
       <div className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-4">
