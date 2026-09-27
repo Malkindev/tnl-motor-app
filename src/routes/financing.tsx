@@ -27,13 +27,13 @@ export const Route = createFileRoute("/financing")({
   validateSearch: searchSchema,
   head: () => ({
     meta: [
-      { title: "Car Financing — Estimate Repayments | TNL Motor" },
+      { title: "Car Financing — Estimate Repayments | TNL Motors" },
       {
         name: "description",
         content:
-          "Estimate your monthly car repayment and apply for financing through TNL Motor's lending partners.",
+          "Estimate your monthly car repayment and apply for financing through TNL Motors' lending partners.",
       },
-      { property: "og:title", content: "Car Financing — TNL Motor" },
+      { property: "og:title", content: "Car Financing — TNL Motors" },
       { property: "og:description", content: "Estimate repayments and apply for vehicle financing." },
     ],
   }),
