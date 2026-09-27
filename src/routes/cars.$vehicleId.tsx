@@ -37,12 +37,12 @@ import { useToggleWishlist, useWishlistIds } from "@/hooks/useWishlist";
 export const Route = createFileRoute("/cars/$vehicleId")({
   head: () => ({
     meta: [
-      { title: "Vehicle Details — TNL Motor" },
+      { title: "Vehicle Details — TNL Motors" },
       {
         name: "description",
-        content: "Full specification, photos, features and pricing for this vehicle at TNL Motor.",
+        content: "Full specification, photos, features and pricing for this vehicle at TNL Motors.",
       },
-      { property: "og:title", content: "Vehicle Details — TNL Motor" },
+      { property: "og:title", content: "Vehicle Details — TNL Motors" },
       {
         property: "og:description",
         content: "Photos, specification and pricing for this inspected vehicle.",
