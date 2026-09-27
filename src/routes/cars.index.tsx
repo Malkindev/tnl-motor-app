@@ -49,13 +49,13 @@ export const Route = createFileRoute("/cars/")({
   validateSearch: searchSchema,
   head: () => ({
     meta: [
-      { title: "Cars for Sale — TNL Motor Inventory" },
+      { title: "Cars for Sale — TNL Motors Inventory" },
       {
         name: "description",
         content:
-          "Search the full TNL Motor inventory: SUVs, sedans, pickups and more. Filter by make, budget, fuel type and transmission.",
+          "Search the full TNL Motors inventory: SUVs, sedans, pickups and more. Filter by make, budget, fuel type and transmission.",
       },
-      { property: "og:title", content: "Cars for Sale — TNL Motor" },
+      { property: "og:title", content: "Cars for Sale — TNL Motors" },
       {
         property: "og:description",
         content: "Search inspected cars by make, budget, body type and transmission.",
