@@ -23,14 +23,14 @@ export const Route = createFileRoute("/auth")({
   validateSearch: searchSchema,
   head: () => ({
     meta: [
-      { title: "Sign In or Create an Account — TNL Motor" },
+      { title: "Sign In or Create an Account — TNL Motors" },
       {
         name: "description",
         content:
-          "Sign in to your TNL Motor account to save cars, track enquiries and manage your details.",
+          "Sign in to your TNL Motors account to save cars, track enquiries and manage your details.",
       },
-      { property: "og:title", content: "Sign In — TNL Motor" },
-      { property: "og:description", content: "Access your TNL Motor customer account." },
+      { property: "og:title", content: "Sign In — TNL Motors" },
+      { property: "og:description", content: "Access your TNL Motors customer account." },
     ],
   }),
   component: AuthPage,
@@ -90,7 +90,7 @@ function AuthPage() {
     const { data: isAdmin, error: roleError } = await supabase.rpc("is_admin");
     const destination = !roleError && isAdmin === true ? "/admin" : target;
     toast.success(
-      destination === "/admin" ? "Welcome to the TNL Motor Admin Panel" : "Welcome back",
+      destination === "/admin" ? "Welcome to the TNL Motors Admin Panel" : "Welcome back",
     );
     navigate({ to: destination, replace: true });
   }
