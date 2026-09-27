@@ -79,11 +79,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "TNL Motor — Quality Vehicles" },
+      { title: "TNL Motors — Quality Vehicles" },
       {
         name: "description",
         content:
-          "TNL Motor sells, buys and finances quality vehicles with transparent pricing and full inspection reports.",
+          "TNL Motors sells, buys and finances quality vehicles with transparent pricing and full inspection reports.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
