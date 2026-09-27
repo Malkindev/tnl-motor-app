@@ -12,9 +12,9 @@ export const Route = createFileRoute("/reset-password")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Set a New Password — TNL Motor" },
-      { name: "description", content: "Choose a new password for your TNL Motor account." },
-      { property: "og:title", content: "Set a New Password — TNL Motor" },
+      { title: "Set a New Password — TNL Motors" },
+      { name: "description", content: "Choose a new password for your TNL Motors account." },
+      { property: "og:title", content: "Set a New Password — TNL Motors" },
       { property: "og:description", content: "Choose a new password for your account." },
     ],
   }),
