@@ -10,10 +10,10 @@ import type { VehicleWithImages } from "@/lib/vehicles";
 export const Route = createFileRoute("/_authenticated/wishlist")({
   head: () => ({
     meta: [
-      { title: "Saved Cars — TNL Motor" },
-      { name: "description", content: "The cars you have saved from the TNL Motor inventory." },
-      { property: "og:title", content: "Saved Cars — TNL Motor" },
-      { property: "og:description", content: "Your saved vehicles at TNL Motor." },
+      { title: "Saved Cars — TNL Motors" },
+      { name: "description", content: "The cars you have saved from the TNL Motors inventory." },
+      { property: "og:title", content: "Saved Cars — TNL Motors" },
+      { property: "og:description", content: "Your saved vehicles at TNL Motors." },
     ],
   }),
   component: Wishlist,
