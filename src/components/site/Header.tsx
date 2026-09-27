@@ -60,15 +60,10 @@ export function Header() {
 
   return (
     <header
-      className={cn(
-        "sticky top-0 z-50 w-full border-b transition-colors duration-300",
-        scrolled
-          ? "border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80"
-          : "border-transparent bg-background",
-      )}
+      className="sticky top-0 z-50 w-full border-b border-transparent bg-primary text-primary-foreground shadow-sm"
     >
       <div className="container-page flex h-16 items-center justify-between gap-4 md:h-20">
-        <Logo />
+        <Logo tone="dark" />
 
         <nav className="hidden items-center gap-1 lg:flex">
           {navItems.map((item) => (
@@ -76,8 +71,8 @@ export function Header() {
               key={item.to}
               to={item.to}
               activeOptions={{ exact: item.to === "/" }}
-              activeProps={{ className: "text-accent" }}
-              className="rounded-md px-3 py-2 text-sm font-semibold text-foreground/80 transition-colors hover:text-accent"
+              activeProps={{ className: "text-primary-foreground" }}
+              className="rounded-md px-3 py-2 text-sm font-semibold text-primary-foreground/85 transition-colors hover:bg-primary-foreground/10 hover:text-primary-foreground"
             >
               {item.label}
             </Link>
@@ -88,12 +83,19 @@ export function Header() {
           <Button
             variant="ghost"
             size="icon"
+            className="text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
             aria-label="Search cars"
             onClick={() => setSearchOpen((v) => !v)}
           >
             <Search className="size-5" />
           </Button>
-          <Button variant="ghost" size="icon" asChild aria-label="Saved cars">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+            asChild
+            aria-label="Saved cars"
+          >
             <Link to="/wishlist">
               <Heart className="size-5" />
             </Link>
@@ -102,7 +104,12 @@ export function Header() {
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label="Account menu">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+                  aria-label="Account menu"
+                >
                   <UserIcon className="size-5" />
                 </Button>
               </DropdownMenuTrigger>
@@ -129,20 +136,34 @@ export function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button variant="ghost" size="icon" asChild aria-label="Sign in">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+              asChild
+              aria-label="Sign in"
+            >
               <Link to="/auth">
                 <UserIcon className="size-5" />
               </Link>
             </Button>
           )}
 
-          <Button asChild className="ml-1 hidden md:inline-flex">
+          <Button
+            asChild
+            className="ml-1 hidden md:inline-flex bg-primary-foreground text-primary hover:bg-primary-foreground/90"
+          >
             <Link to="/cars">View Cars</Link>
           </Button>
 
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="lg:hidden" aria-label="Open menu">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground lg:hidden"
+                aria-label="Open menu"
+              >
                 <Menu className="size-5" />
               </Button>
             </SheetTrigger>
