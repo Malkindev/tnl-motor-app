@@ -10,13 +10,13 @@ import { fetchServices } from "@/lib/content";
 export const Route = createFileRoute("/services")({
   head: () => ({
     meta: [
-      { title: "Services — Sales, Financing, Trade-Ins & Support | TNL Motor" },
+      { title: "Services — Sales, Financing, Trade-Ins & Support | TNL Motors" },
       {
         name: "description",
         content:
-          "Vehicle sourcing, inspections, financing, trade-ins, registration and after-sales support from TNL Motor.",
+          "Vehicle sourcing, inspections, financing, trade-ins, registration and after-sales support from TNL Motors.",
       },
-      { property: "og:title", content: "Services — TNL Motor" },
+      { property: "og:title", content: "Services — TNL Motors" },
       {
         property: "og:description",
         content: "Sourcing, inspections, financing, trade-ins and registration support.",
