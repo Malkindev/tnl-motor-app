@@ -34,13 +34,13 @@ import { useSettings, whatsappLink } from "@/hooks/useSettings";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "TNL Motor — Quality Cars for Sale, Financing & Trade-Ins" },
+      { title: "TNL Motors — Quality Cars for Sale, Financing & Trade-Ins" },
       {
         name: "description",
         content:
-          "Browse inspected cars, SUVs and pickups at TNL Motor. Transparent pricing, flexible financing and a fair price for your current car.",
+          "Browse inspected cars, SUVs and pickups at TNL Motors. Transparent pricing, flexible financing and a fair price for your current car.",
       },
-      { property: "og:title", content: "TNL Motor — Quality Cars for Sale" },
+      { property: "og:title", content: "TNL Motors — Quality Cars for Sale" },
       {
         property: "og:description",
         content: "Inspected vehicles, transparent pricing and flexible financing.",
