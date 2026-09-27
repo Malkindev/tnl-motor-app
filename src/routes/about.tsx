@@ -10,13 +10,13 @@ import { fetchTestimonials } from "@/lib/content";
 export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
-      { title: "About TNL Motor — Who We Are" },
+      { title: "About TNL Motors — Who We Are" },
       {
         name: "description",
         content:
-          "TNL Motor is a vehicle dealership built on inspected stock, honest pricing and paperwork handled properly.",
+          "TNL Motors is a vehicle dealership built on inspected stock, honest pricing and paperwork handled properly.",
       },
-      { property: "og:title", content: "About TNL Motor" },
+      { property: "og:title", content: "About TNL Motors" },
       { property: "og:description", content: "Inspected stock, honest pricing, paperwork done right." },
     ],
   }),
