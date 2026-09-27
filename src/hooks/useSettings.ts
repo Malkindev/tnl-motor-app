@@ -24,7 +24,7 @@ export const settingsDefaults: SiteSettings = {
   phone: "+254 101103530",
   whatsapp: "+254101103530",
   email: "tnlmotors4@gmail.com",
-  address: "",
+  address: "Kilifi Mtondia Trading Center",
   opening_hours: "",
   hero_heading: "Find Your Next Car With TNL Motors",
   hero_description: "Quality vehicles. Transparent pricing. A better way to buy and sell cars.",
