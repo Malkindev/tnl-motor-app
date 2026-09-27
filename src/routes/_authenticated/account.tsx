@@ -17,9 +17,9 @@ import { useSession } from "@/hooks/useAuth";
 export const Route = createFileRoute("/_authenticated/account")({
   head: () => ({
     meta: [
-      { title: "My Account — TNL Motor" },
-      { name: "description", content: "Manage your TNL Motor profile, enquiries and requests." },
-      { property: "og:title", content: "My Account — TNL Motor" },
+      { title: "My Account — TNL Motors" },
+      { name: "description", content: "Manage your TNL Motors profile, enquiries and requests." },
+      { property: "og:title", content: "My Account — TNL Motors" },
       { property: "og:description", content: "Your profile, enquiries and requests." },
     ],
   }),
