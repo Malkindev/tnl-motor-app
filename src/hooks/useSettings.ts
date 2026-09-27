@@ -20,13 +20,13 @@ export type SettingKey =
 export type SiteSettings = Record<SettingKey, string> & { [key: string]: string };
 
 export const settingsDefaults: SiteSettings = {
-  company_name: "TNL Motor",
+  company_name: "TNL Motors",
   phone: "+254 101103530",
   whatsapp: "+254101103530",
   email: "tnlmotors4@gmail.com",
   address: "",
   opening_hours: "",
-  hero_heading: "Find Your Next Car With TNL Motor",
+  hero_heading: "Find Your Next Car With TNL Motors",
   hero_description: "Quality vehicles. Transparent pricing. A better way to buy and sell cars.",
   cta_heading: "Ready to Find Your Next Car?",
   footer_text: "",
@@ -44,12 +44,13 @@ export async function fetchSettings(): Promise<SiteSettings> {
     if (row.value != null) map[row.key] = row.value;
   }
 
-  // Keep TNL Motor contact details consistent site-wide, even when older
+  // Keep TNL Motors contact details consistent site-wide, even when older
   // database placeholders are still present or settings have not loaded yet.
-  map.company_name = "TNL Motor";
+  map.company_name = "TNL Motors";
   map.phone = "+254 101103530";
   map.whatsapp = "+254101103530";
   map.email = "tnlmotors4@gmail.com";
+  map.address = "Kilifi Mtondia Trading Center";
   return map;
 }
 
