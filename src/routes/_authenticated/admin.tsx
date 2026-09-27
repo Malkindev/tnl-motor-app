@@ -29,11 +29,11 @@ import { AdminSettings } from "@/components/admin/AdminSettings";
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
     meta: [
-      { title: "Admin — TNL Motor" },
-      { name: "description", content: "Manage TNL Motor inventory, enquiries and website content." },
+      { title: "Admin — TNL Motors" },
+      { name: "description", content: "Manage TNL Motors inventory, enquiries and website content." },
       { name: "robots", content: "noindex" },
-      { property: "og:title", content: "Admin — TNL Motor" },
-      { property: "og:description", content: "TNL Motor administration." },
+      { property: "og:title", content: "Admin — TNL Motors" },
+      { property: "og:description", content: "TNL Motors administration." },
     ],
   }),
   component: AdminPage,
@@ -73,7 +73,7 @@ function AdminPage() {
         <div className="container-page py-24 text-center">
           <h1 className="font-display text-2xl font-bold">Admins only</h1>
           <p className="mt-2 text-muted-foreground">
-            This area is restricted to TNL Motor staff accounts.
+            This area is restricted to TNL Motors staff accounts.
           </p>
           <Button asChild className="mt-6">
             <Link to="/">Back to the site</Link>
@@ -86,7 +86,7 @@ function AdminPage() {
   return (
     <SiteLayout>
       <div className="container-page py-10">
-        <h1 className="font-display text-3xl font-bold">TNL Motor admin</h1>
+        <h1 className="font-display text-3xl font-bold">TNL Motors admin</h1>
         <p className="mt-1 text-muted-foreground">Manage inventory, requests and site content.</p>
 
         <div className="mt-8 grid gap-8 lg:grid-cols-[220px_1fr]">
@@ -147,7 +147,7 @@ function AdminPage() {
               <AdminRequests
                 table="sell_requests"
                 title="Sell requests"
-                description="Cars people want to sell to TNL Motor."
+                description="Cars people want to sell to TNL Motors."
               />
             ) : null}
             {tab === "financing" ? (
