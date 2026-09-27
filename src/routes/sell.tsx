@@ -24,13 +24,13 @@ import { useSession } from "@/hooks/useAuth";
 export const Route = createFileRoute("/sell")({
   head: () => ({
     meta: [
-      { title: "Sell Your Car — Get a Valuation | TNL Motor" },
+      { title: "Sell Your Car — Get a Valuation | TNL Motors" },
       {
         name: "description",
         content:
-          "Tell us about your car and get a same-day valuation from TNL Motor. We buy outright or take trade-ins.",
+          "Tell us about your car and get a same-day valuation from TNL Motors. We buy outright or take trade-ins.",
       },
-      { property: "og:title", content: "Sell Your Car — TNL Motor" },
+      { property: "og:title", content: "Sell Your Car — TNL Motors" },
       { property: "og:description", content: "Get a same-day valuation for your car." },
     ],
   }),
