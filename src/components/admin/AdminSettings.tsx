@@ -59,7 +59,7 @@ export function AdminSettings() {
     const next: Record<string, string> = {};
     for (const row of settings.data) next[row.key] = row.value ?? "";
 
-    // Keep the official TNL Motor contact details visible in the admin panel.
+    // Keep the official TNL Motors contact details visible in the admin panel.
     next.company_name = settingsDefaults.company_name;
     next.phone = settingsDefaults.phone;
     next.whatsapp = settingsDefaults.whatsapp;
