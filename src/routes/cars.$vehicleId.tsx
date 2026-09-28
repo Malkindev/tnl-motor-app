@@ -255,7 +255,6 @@ function VehicleDetails() {
               <Badge variant={vehicle.status === "available" ? "secondary" : "destructive"}>
                 {statusLabel(vehicle.status)}
               </Badge>
-              {vehicle.is_demo ? <Badge variant="outline">Demo listing</Badge> : null}
             </div>
             <h1 className="mt-3 font-display text-2xl font-extrabold leading-tight">{title}</h1>
             <p className="mt-2 font-display text-3xl font-extrabold text-accent">
